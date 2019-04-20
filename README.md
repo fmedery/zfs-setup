@@ -2,8 +2,8 @@
 
 # Information
 * Just my step by step method to create my ZFS pools. It will not make any sense except for me.
-* New HDDs are in a USB enclosure to sync with the old HHDs.
-* I will remplace the old HDDS with the new one and rename the pool of the next HDDs to match the old pool
+* New HDDs are in an USB enclosure to sync with the old HHDs.
+* I will remplace the old HDDS with the new one and rename the new pool to match the old pool.
 * zfs info: https://github.com/zfsonlinux/zfs/wiki/FAQ#selecting-dev-names-when-creating-a-pool
 
 **Do not forget to use tmux or screen**
@@ -50,7 +50,57 @@ config:
 
 ```
 
-* Get attributes (pool01 only)
+* Get pool attributes (pool01 only)
+
+```
+┌─[san]─[/pool02/backups/plex]
+└─⚬ zpool get all pool01
+NAME    PROPERTY                       VALUE                          SOURCE
+pool01  size                           10.9T                          -
+pool01  capacity                       69%                            -
+pool01  altroot                        -                              default
+pool01  health                         ONLINE                         -
+pool01  guid                           10964498760137193668           -
+pool01  version                        -                              default
+pool01  bootfs                         -                              default
+pool01  delegation                     on                             default
+pool01  autoreplace                    off                            default
+pool01  cachefile                      -                              default
+pool01  failmode                       wait                           default
+pool01  listsnapshots                  off                            default
+pool01  autoexpand                     off                            default
+pool01  dedupditto                     0                              default
+pool01  dedupratio                     1.00x                          -
+pool01  free                           3.32T                          -
+pool01  allocated                      7.56T                          -
+pool01  readonly                       off                            -
+pool01  ashift                         12                             local
+pool01  comment                        -                              default
+pool01  expandsize                     -                              -
+pool01  freeing                        0                              -
+pool01  fragmentation                  14%                            -
+pool01  leaked                         0                              -
+pool01  multihost                      off                            default
+pool01  feature@async_destroy          enabled                        local
+pool01  feature@empty_bpobj            active                         local
+pool01  feature@lz4_compress           active                         local
+pool01  feature@multi_vdev_crash_dump  enabled                        local
+pool01  feature@spacemap_histogram     active                         local
+pool01  feature@enabled_txg            active                         local
+pool01  feature@hole_birth             active                         local
+pool01  feature@extensible_dataset     active                         local
+pool01  feature@embedded_data          active                         local
+pool01  feature@bookmarks              enabled                        local
+pool01  feature@filesystem_limits      enabled                        local
+pool01  feature@large_blocks           enabled                        local
+pool01  feature@large_dnode            enabled                        local
+pool01  feature@sha512                 enabled                        local
+pool01  feature@skein                  enabled                        local
+pool01  feature@edonr                  enabled                        local
+pool01  feature@userobj_accounting     active                         local
+```
+
+* Get volumes attributes (pool01 only)
 ```
 ┌─[san]─[~]
 └─⚬ zfs get all pool01
@@ -149,6 +199,32 @@ pool03/owncloud_backup   atime     on     default
 pool03/salt              atime     on     default
 ```
 
+* Get quota
+```
+┌─[san]─[/pool02/backups/plex]
+└─⚬ zfs get quota
+NAME                     PROPERTY  VALUE  SOURCE
+pool01                   quota     none   default
+pool01/Plex              quota     6T     local
+pool01/backup_ubuntu     quota     none   default
+pool01/docker            quota     none   default
+pool01/git               quota     none   default
+pool01/jupyter-notebook  quota     none   default
+pool01/minidlna          quota     none   default
+pool01/salt              quota     none   default
+pool02                   quota     none   default
+pool02/timemachine       quota     none   default
+pool03                   quota     none   default
+pool03/Plex              quota     none   default
+pool03/backup_ubuntu     quota     none   default
+pool03/docker            quota     none   default
+pool03/drivers           quota     none   default
+pool03/git               quota     none   default
+pool03/jupyter-notebook  quota     none   default
+pool03/minidlna          quota     none   default
+pool03/owncloud_backup   quota     none   default
+pool03/salt              quota     none   default
+```
 # Create new ZRAID temporary pool
 * New HDDs have no partition
 ```
@@ -172,8 +248,8 @@ Sector size (logical/physical): 512 bytes / 4096 bytes
 I/O size (minimum/optimal): 4096 bytes / 4096 bytes
 ```
 
-*  I will not use the /dev/sd* but the IDs
-* force ashift=12 for better perfs
+* I will not use the /dev/sd* but the IDs
+* Force ashift=12 for better perfs
  ```sh
 ┌─[san]─[/dev/disk/by-id]
 └─⚬ zpool create -o ashift=12 pool03 raidz $(ls /dev/disk/by-id/usb*)
@@ -197,6 +273,7 @@ pool03                                        ONLINE       0     0     0
 errors: No known data errors
 ```
 
+## Check ashift
 ```
 ┌─[san]─[/pool02/backups/plex]
 └─⚬ zpool get ashift                                                                                                     
@@ -206,7 +283,7 @@ pool02  ashift    0       default
 pool03  ashift    12      local
 ```
 
-* Check partitions
+## Check partitions
 ```
 ┌─[san]─[/dev/disk/by-id]
 └─⚬ fdisk -l /dev/sd{g,h,i}
@@ -246,7 +323,57 @@ Device           Start         End     Sectors  Size Type
 /dev/sdi9  15628036096 15628052479       16384    8M Solaris reserved 1
  ```
  
- * check properties
+ ## Check properties
+ * Pool properties
+ ```
+ ┌─[san]─[/pool02/backups/plex]
+└─⚬ zpool get all pool03
+NAME    PROPERTY                       VALUE                          SOURCE
+pool03  size                           21.8T                          -
+pool03  capacity                       32%                            -
+pool03  altroot                        -                              default
+pool03  health                         ONLINE                         -
+pool03  guid                           6740060430251469199            -
+pool03  version                        -                              default
+pool03  bootfs                         -                              default
+pool03  delegation                     on                             default
+pool03  autoreplace                    off                            default
+pool03  cachefile                      -                              default
+pool03  failmode                       wait                           default
+pool03  listsnapshots                  off                            default
+pool03  autoexpand                     off                            default
+pool03  dedupditto                     0                              default
+pool03  dedupratio                     1.00x                          -
+pool03  free                           14.7T                          -
+pool03  allocated                      7.06T                          -
+pool03  readonly                       off                            -
+pool03  ashift                         12                             local
+pool03  comment                        -                              default
+pool03  expandsize                     -                              -
+pool03  freeing                        0                              -
+pool03  fragmentation                  0%                             -
+pool03  leaked                         0                              -
+pool03  multihost                      off                            default
+pool03  feature@async_destroy          enabled                        local
+pool03  feature@empty_bpobj            active                         local
+pool03  feature@lz4_compress           active                         local
+pool03  feature@multi_vdev_crash_dump  enabled                        local
+pool03  feature@spacemap_histogram     active                         local
+pool03  feature@enabled_txg            active                         local
+pool03  feature@hole_birth             active                         local
+pool03  feature@extensible_dataset     active                         local
+pool03  feature@embedded_data          active                         local
+pool03  feature@bookmarks              enabled                        local
+pool03  feature@filesystem_limits      enabled                        local
+pool03  feature@large_blocks           enabled                        local
+pool03  feature@large_dnode            enabled                        local
+pool03  feature@sha512                 enabled                        local
+pool03  feature@skein                  enabled                        local
+pool03  feature@edonr                  enabled                        local
+pool03  feature@userobj_accounting     active                         local
+```
+ 
+ * Volumes properties
  ```
 ┌─[san]─[/pool02/backups/plex]
 └─⚬ zfs get all pool03
@@ -338,8 +465,8 @@ for folder in $(ls /pool01/); do echo zfs create pool03/${folder}; done
 └─⚬ chmod 777 /pool03/Plex
 ```
 
-# Disable atime
-* Disabling atime on the pool will also disable it on all volumes
+# Disable atime on all pools
+* Disabling atime on the pool will also disable it on all child volumes.
 ```
 ┌─[san]─[/pool02/backups/plex]
 └─⚬ zfs set atime=off pool0{1,2,3}
@@ -371,9 +498,24 @@ pool03/owncloud_backup   atime     off    inherited from pool03
 pool03/salt              atime     off    inherited from pool03
 ```
 
-# sync FS content
+# Sync FS content
 ```
 for folder in $(ls /pool01/); do rsync -av /pool01/${folder}/ /pool03/${folder}/; done
 ```
 
+# Replace old pool with new pool
+## Stop all containers and disable dockerd at start
 
+## Rename pool01 
+
+## Replace HDDs
+
+## Reconnect HDDs from USB to SATA in pool03
+
+## Rename pool03 to pool01
+
+## Renable dockerd
+
+## Set quota
+
+# rename pool01
