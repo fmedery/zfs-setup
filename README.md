@@ -264,8 +264,8 @@ change ownership and permissions
 └─⚬ chmod 777 /pool03/Plex
 ```
 
-sync FS content starting with plex
+sync FS content
 
 ```
- for folder in Plex backup_ubuntu docker drivers git jupyter-notebook minidlna owncloud_backup salt; do echo rsync -av /pool01/${folder}/\* /pool03/${folder}/;done
+ for folder in Plex backup_ubuntu docker drivers git jupyter-notebook minidlna owncloud_backup salt; do rsync -av /pool01/${folder}/ /pool03/${folder}/; done
  ```
