@@ -4,7 +4,9 @@
 * Just my step by step method to create my ZFS pools. It will not make any sense except for me.
 * New HDDs are in an USB enclosure to sync with the old HHDs.
 * I will remplace the old HDDS with the new one and rename the new pool to match the old pool.
-* zfs info: https://github.com/zfsonlinux/zfs/wiki/FAQ#selecting-dev-names-when-creating-a-pool
+* ZFS info: https://github.com/zfsonlinux/zfs/wiki/FAQ#selecting-dev-names-when-creating-a-pool
+* I will use root user because I am lazy.
+* /dev/disk/by-id/wwn* are the best candidates: https://en.wikipedia.org/wiki/World_Wide_Name
 
 **Do not forget to use tmux or screen**
 
@@ -500,22 +502,68 @@ pool03/salt              atime     off    inherited from pool03
 
 # Sync FS content
 ```
-for folder in $(ls /pool01/); do rsync -av /pool01/${folder}/ /pool03/${folder}/; done
+for folder in $(ls /pool01/); do rsync --delete -av /pool01/${folder}/ /pool03/${folder}/; done
 ```
 
 # Replace old pool with new pool
 ## Stop all containers and disable dockerd at start
+```sh
+for service in smbd netatalk docker; do
+	sudo systemctl stop ${service}
+	sudo systemctl disable ${service}
+done
+```
 
-## Rename pool01 
+```
+┌─[san]─[~]
+└─⚬ lsof|grep pool0
+
+┌─[san]─[~]
+```
+## Rename pool01 to pool01_old
+```sh
+zpool export pool01
+zpool import pool01 pool01_old  
+```
 
 ## Replace HDDs
+* Just swapping pool01_old HDDs inside my NAS by pool03 HDDs
 
-## Reconnect HDDs from USB to SATA in pool03
+## Reconnect HDDs to pool03
+* IDs have changed, now we need to reconnect the HDDs
+```
+zpool import -d /dev/disk/by-id pool03
+```
+
+* test if pool is present
+```
+┌─[san]─[~]
+└─⚬ zpool list
+NAME     SIZE  ALLOC   FREE  EXPANDSZ   FRAG    CAP  DEDUP  HEALTH  ALTROOT
+pool03  21.8T  7.57T  14.2T         -     0%    34%  1.00x  ONLINE  -
+```
 
 ## Rename pool03 to pool01
+```
+zfs export pool03
+zfs import pool03 pool01
+```
 
-## Renable dockerd
+## Re enable services
+```sh
+for service in smbd netatalk docker; do
+	sudo systemctl start ${service}
+	sudo systemctl enable ${service}
+done
+```
 
-## Set quota
+## Set quota on Plex partition
 
-# rename pool01
+```sh
+sudo zfs set quota=15TB pool01/Plex
+```
+
+## cleanup
+```
+rmdir /pool01_old
+```
