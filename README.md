@@ -1,4 +1,4 @@
-# zfs-setup
+# zfs new setup
 
 # Information
 * Just my step by step method to create my ZFS pools. It will not make any sense except for me.
@@ -567,3 +567,7 @@ sudo zfs set quota=15TB pool01/Plex
 ```
 rmdir /pool01_old
 ```
+
+# replace zfs disk
+
+https://dlford.io/linux-zfs-raid-disk-replacement-procedure/
